@@ -8,28 +8,40 @@ url = "https://www.e-gov.az/az/news"
 news_data = []
 
 for page_numb in range(1, all_pages + 1):
-    # Add user-agent to the website in order not be considered as a bot
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    # the preparation of http request - this prevents the site from preventing the program as a bot and block it
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
     
-    # Get a response from te site
+    # the url sends a request to http
     response = requests.get(url, headers=headers) 
     
     if response.status_code == 200:
         print(f"Page {page_numb} loaded successfully!")
         
-        # Create a BeautifulSoup object and specify the parser
+        # create a BeautifulSoup object and specify the parser
         soup = BeautifulSoup(response.content, "html.parser")
         news_list = soup.find('ul', class_='news-list')
         
-        # Find all <li> tags 
+        # find all <li> tags 
         items = news_list.find_all('li')
         for item in items:
             try:
-                # Find the <a> tag and read the title attribute
+                # find the <a> tag and read the title attribute
                 link = item.find('a')
-                if link and link.get('title'):
-                    title = link.get('title').strip()
-                news_data.append({'title': title}) 
+                
+                # get the news headline
+                title = link.get('title').strip()
+                
+                # get the url address of each news
+                url_address = link.get('href').strip()
+                
+                # get the published date
+                div = item.find('div', class_='tools flex gap-4  text-sm text-gray-500')
+                time_tag = div.find('time')
+                published_date = time_tag.text.strip()
+                
+                news_data.append({'title': title,
+                                  'url': url_address,
+                                  'published date': published_date})  
             except Exception as e:
                 print(f"Obtained an error: {e}")
                 continue 
