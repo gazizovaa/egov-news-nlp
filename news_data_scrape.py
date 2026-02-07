@@ -32,16 +32,22 @@ for page_numb in range(1, all_pages + 1):
                 title = link.get('title').strip()
                 
                 # get the url address of each news
-                url_address = link.get('href').strip()
+                base_url = "https://www.e-gov.az"
+                url_address = base_url + link.get('href', '').strip()
                 
                 # get the published date
-                div = item.find('div', class_='tools flex gap-4  text-sm text-gray-500')
-                time_tag = div.find('time')
+                tools_div = item.select_one('div.tools')
+                time_tag = tools_div.find('time')
                 published_date = time_tag.text.strip()
+                
+                # get the view statistics
+                views_div = tools_div.find_all('div')[-1]
+                views_count = views_div.text.strip()
                 
                 news_data.append({'title': title,
                                   'url': url_address,
-                                  'published date': published_date})  
+                                  'published date': published_date,
+                                  'views': views_count})  
             except Exception as e:
                 print(f"Obtained an error: {e}")
                 continue 
