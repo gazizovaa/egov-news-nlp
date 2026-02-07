@@ -35,6 +35,13 @@ for page_numb in range(1, all_pages + 1):
                 base_url = "https://www.e-gov.az"
                 url_address = base_url + link.get('href', '').strip()
                 
+                # get the news content
+                news_soup = BeautifulSoup(requests.get(base_url).content, "html.parser")
+                content = ""
+                
+                for p in news_soup.select('#NewsContent p'):
+                    content += p.text.strip() + " "
+                
                 # get the published date
                 tools_div = item.select_one('div.tools')
                 time_tag = tools_div.find('time')
@@ -46,6 +53,7 @@ for page_numb in range(1, all_pages + 1):
                 
                 news_data.append({'title': title,
                                   'url': url_address,
+                                  'content': content,
                                   'published date': published_date,
                                   'views': views_count})  
             except Exception as e:
