@@ -36,7 +36,8 @@ for page_numb in range(1, all_pages + 1):
                 url_address = base_url + link.get('href', '').strip()
                 
                 # get the news content
-                news_soup = BeautifulSoup(requests.get(base_url).content, "html.parser")
+                news_soup = BeautifulSoup(requests.get(url_address, headers=headers).content, 
+                                          "html.parser")
                 content = ""
                 
                 for p in news_soup.select('#NewsContent p'):
