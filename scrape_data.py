@@ -3,39 +3,45 @@ import requests
 import time 
 import pandas as pd 
 
+# scrape ediləcək səhifələrin ümumi sayını göstərir
 all_pages = 83
+
+# xəbərlərin siyahısı olan səhifə
 url = "https://www.e-gov.az/az/news"
+
+# xəbər keçidlərini tamamlamaq üçün əsas domen
+base_url = "https://www.e-gov.az"
+
+# veb səhifədən çıxarılacaq məlumatları yaradılmış boş listdə toplanır
 news_data = []
 
 for page_numb in range(1, all_pages + 1):
-    # the preparation of http request - this prevents the site from preventing the program as a bot and block it
+    # sayta özümüzü brauzer kimi təqdim etmək üçün başlıq
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
     
-    # the url sends a request to http
+    # saytın məzmununu yükləyir 
     response = requests.get(url, headers=headers) 
     
     if response.status_code == 200:
         print(f"Page {page_numb} loaded successfully!")
         
-        # create a BeautifulSoup object and specify the parser
+        # xəbərlərin olduğu siyahını tapır
         soup = BeautifulSoup(response.content, "html.parser")
         news_list = soup.find('ul', class_='news-list')
         
-        # find all <li> tags 
+        # hər bir xəbər blokunu tapır
         items = news_list.find_all('li')
         for item in items:
             try:
-                # find the <a> tag and read the title attribute
+                # hər bir xəbərin yerləşdiyi ünvan addressini tapır
                 link = item.find('a')
                 
-                # get the news headline
+                # xəbər başlıqlarını götürür
                 title = link.get('title').strip()
                 
-                # get the url address of each news
-                base_url = "https://www.e-gov.az"
                 url_address = base_url + link.get('href', '').strip()
                 
-                # get the news content
+                # hər xəbərin daxilinə girib mətnini oxuyur
                 news_soup = BeautifulSoup(requests.get(url_address, headers=headers).content, 
                                           "html.parser")
                 content = ""
@@ -43,13 +49,14 @@ for page_numb in range(1, all_pages + 1):
                 for p in news_soup.select('#NewsContent p'):
                     content += p.text.strip() + " "
                 
-                # get the published date
+                # tarix və xəbər baxışlarının qeyd olunduğu hissə
                 tools_div = item.select_one('div.tools')
                 time_tag = tools_div.find('time')
+                # tarixi götürür
                 published_date = time_tag.text.strip()
                 
-                # get the view statistics
                 views_div = tools_div.find_all('div')[-1]
+                # baxış sayını göstərir
                 views_count = views_div.text.strip()
                 
                 news_data.append({'title': title,
@@ -61,6 +68,7 @@ for page_numb in range(1, all_pages + 1):
                 print(f"Obtained an error: {e}")
                 continue 
         time.sleep(2)
-   
+
+# scrape edilən məlumatları dataframe-ə çevirir
 df = pd.DataFrame(data=news_data)
 df.to_csv('egov_news.csv', encoding='utf-8')
