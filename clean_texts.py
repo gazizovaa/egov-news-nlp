@@ -1,6 +1,8 @@
 import numpy as np 
 import pandas as pd 
-import re
+import nltk
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
 
 df = pd.read_csv('egov_news.csv')
 pd.set_option('display.max_columns', None) 
@@ -40,5 +42,38 @@ df_cleaned['content'] = df_cleaned['content'].str.replace(r'[^\w\s]', '', regex=
 # boşluqların silinməsi
 df_cleaned['title'] = df_cleaned['title'].str.replace(r'\s+', ' ', regex=True).str.strip()
 df_cleaned['content'] = df_cleaned['content'].str.replace(r'\s+', ' ', regex=True).str.strip()
+
+# NLTK ilə Tokenization
+# punkt_tab modelini yükləyirik -> nltk kitabxanasının pre-trained olunmuş modelidir
+# nltk.download("punkt_tab")
+
+# xəbər başlıq cümlələrini sözlərə parçalanması
+for row in df_cleaned['title']:
+    print(word_tokenize(row))
+
+# stopwords removal tətbiqi
+# nltk.download("stopwords")
+# ingilis dilindəki stopwords-ləri əldə edirik
+stopwords_list = set(stopwords.words('english'))
+
+# silinmə prosesi
+df_cleaned['title'] = df_cleaned['title'].apply(
+    lambda row: [word for word in word_tokenize(row) if word not in stopwords_list])
 print(df_cleaned['title'])
 
+# xəbər kontentlərinə daxil olan cümlələrin sözlərə parçalanması
+# stopwords removal tətbiqi
+def tokenize_content(text):
+    if pd.isna(text):
+        return []
+    
+    sentences = sent_tokenize(text)
+    words_list = []
+    for sentence in sentences:
+        words_list.extend(word_tokenize(sentence))
+        return [word for word in words_list if word not in stopwords_list]
+
+df_cleaned['content'] = df_cleaned['content'].apply(tokenize_content)
+print(df_cleaned['content'])
+
+# Stemming 
