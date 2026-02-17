@@ -6,9 +6,6 @@ import pandas as pd
 # scrape ediləcək səhifələrin ümumi sayını göstərir
 all_pages = 83
 
-# xəbərlərin siyahısı olan səhifə
-url = "https://www.e-gov.az/az/news"
-
 # xəbər keçidlərini tamamlamaq üçün əsas domen
 base_url = "https://www.e-gov.az"
 
@@ -16,6 +13,9 @@ base_url = "https://www.e-gov.az"
 news_data = []
 
 for page_numb in range(1, all_pages + 1):
+    # xəbərlərin siyahısı olan səhifə
+    url = f"https://www.e-gov.az/az/news/index?page={page_numb}"
+
     # sayta özümüzü brauzer kimi təqdim etmək üçün başlıq
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
     
@@ -72,3 +72,4 @@ for page_numb in range(1, all_pages + 1):
 # scrape edilən məlumatları dataframe-ə çevirir
 df = pd.DataFrame(data=news_data)
 df.to_csv('egov_news.csv', encoding='utf-8')
+
