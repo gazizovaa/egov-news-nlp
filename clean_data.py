@@ -1,5 +1,6 @@
 import numpy as np 
 import pandas as pd 
+import re
 
 df = pd.read_csv('egov_news.csv')
 pd.set_option('display.max_columns', None) 
@@ -23,4 +24,21 @@ df.drop(columns=['published_date'], inplace=True)
 
 # il, ay və günə görə sıralama 
 df_cleaned = df.sort_values(by=['year']).reset_index(drop=True)
-print(df_cleaned)
+
+# Text Normalization
+# title və content sütunlarını daşıyan mətnləri kiçik hərflərlə yazılan mətnlərə çevrilməsi
+df_cleaned['title'] = df_cleaned['title'].str.lower()
+df_cleaned['content'] = df_cleaned['content'].str.lower()
+
+# məna kəsb etməyən rəqəmlərin və xüsusi simvolların silinməsi
+df_cleaned['title'] = df_cleaned['title'].str.replace(r'\d+', '', regex=True)
+df_cleaned['content'] = df_cleaned['content'].str.replace(r'\d+', '', regex=True)
+
+df_cleaned['title'] = df_cleaned['title'].str.replace(r'[^\w\s]', '', regex=True)
+df_cleaned['content'] = df_cleaned['content'].str.replace(r'[^\w\s]', '', regex=True)
+
+# boşluqların silinməsi
+df_cleaned['title'] = df_cleaned['title'].str.replace(r'\s+', ' ', regex=True).str.strip()
+df_cleaned['content'] = df_cleaned['content'].str.replace(r'\s+', ' ', regex=True).str.strip()
+print(df_cleaned['title'])
+
