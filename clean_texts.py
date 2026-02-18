@@ -3,8 +3,9 @@ import pandas as pd
 import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
+from nltk.stem import LancasterStemmer
 
-df = pd.read_csv('egov_news.csv')
+df = pd.read_csv('data/egov_news.csv')
 pd.set_option('display.max_columns', None) 
 
 # oxunaqlılıq üçün bəzi sütun adlarını dəyişdiririk
@@ -59,7 +60,7 @@ stopwords_list = set(stopwords.words('english'))
 # silinmə prosesi
 df_cleaned['title'] = df_cleaned['title'].apply(
     lambda row: [word for word in word_tokenize(row) if word not in stopwords_list])
-print(df_cleaned['title'])
+# print(df_cleaned['title'])
 
 # xəbər kontentlərinə daxil olan cümlələrin sözlərə parçalanması
 # stopwords removal tətbiqi
@@ -74,6 +75,14 @@ def tokenize_content(text):
         return [word for word in words_list if word not in stopwords_list]
 
 df_cleaned['content'] = df_cleaned['content'].apply(tokenize_content)
-print(df_cleaned['content'])
+# print(df_cleaned['content'])
 
 # Stemming 
+lanchaster = LancasterStemmer()
+df_cleaned['title'] = df_cleaned['title'].apply(
+    lambda words :[lanchaster.stem(word) for word in words])
+print(df_cleaned['title'])
+
+df_cleaned['content'] = df_cleaned['content'].apply(
+    lambda words :[lanchaster.stem(word) for word in words])
+print(df_cleaned['content'])
