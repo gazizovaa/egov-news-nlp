@@ -4,6 +4,7 @@ import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import LancasterStemmer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 df = pd.read_csv('data/egov_news.csv')
 pd.set_option('display.max_columns', None) 
@@ -54,8 +55,8 @@ for row in df_cleaned['title']:
 
 # stopwords removal tətbiqi
 # nltk.download("stopwords")
-# ingilis dilindəki stopwords-ləri əldə edirik
-stopwords_list = set(stopwords.words('english'))
+# azərbaycan dilindəki stopwords-ləri əldə edirik
+stopwords_list = set(stopwords.words('azerbaijani'))
 
 # silinmə prosesi
 df_cleaned['title'] = df_cleaned['title'].apply(
@@ -81,8 +82,14 @@ df_cleaned['content'] = df_cleaned['content'].apply(tokenize_content)
 lanchaster = LancasterStemmer()
 df_cleaned['title'] = df_cleaned['title'].apply(
     lambda words :[lanchaster.stem(word) for word in words])
-print(df_cleaned['title'])
+# print(df_cleaned['title'])
 
 df_cleaned['content'] = df_cleaned['content'].apply(
     lambda words :[lanchaster.stem(word) for word in words])
-print(df_cleaned['content'])
+# print(df_cleaned['content'])
+
+# word embedding (vectorization)
+# TF-IDF
+tfidf = TfidfVectorizer()
+print(tfidf.fit_transform(df_cleaned['title']))
+print(tfidf.fit_transform(df_cleaned['content']))
