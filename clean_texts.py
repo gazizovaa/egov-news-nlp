@@ -3,8 +3,9 @@ import pandas as pd
 import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
-from nltk.stem import LancasterStemmer
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
+
 
 df = pd.read_csv('data/egov_news.csv')
 pd.set_option('display.max_columns', None) 
@@ -73,23 +74,76 @@ def tokenize_content(text):
     words_list = []
     for sentence in sentences:
         words_list.extend(word_tokenize(sentence))
-        return [word for word in words_list if word not in stopwords_list]
+    return [word for word in words_list if word not in stopwords_list]
 
 df_cleaned['content'] = df_cleaned['content'].apply(tokenize_content)
 # print(df_cleaned['content'])
 
-# Stemming 
-lanchaster = LancasterStemmer()
-df_cleaned['title'] = df_cleaned['title'].apply(
-    lambda words :[lanchaster.stem(word) for word in words])
-# print(df_cleaned['title'])
+# Stemming, Lemmetization -> the azerbaijani language isn't supported
 
-df_cleaned['content'] = df_cleaned['content'].apply(
-    lambda words :[lanchaster.stem(word) for word in words])
-# print(df_cleaned['content'])
+# token listləri yenidən string-ə convert edirik
+df_cleaned['title'] = df_cleaned['title'].apply(lambda x: ' '.join(x))
+df_cleaned['content'] = df_cleaned['content'].apply(lambda x: ' '.join(x))
+
+# Bag-Of-Words 
+title_vectorizer = CountVectorizer(
+    max_features=1000,
+    ngram_range=(1, 2),
+    min_df=5
+)
+title_bow = title_vectorizer.fit_transform(df_cleaned['title'])
+print(title_vectorizer.get_feature_names_out())
+
+content_vectorizer = CountVectorizer(
+    max_features=1000,
+    ngram_range=(1, 2),
+    min_df=5
+)
+content_bow = content_vectorizer.fit_transform(df_cleaned['content'])
+print(content_vectorizer.get_feature_names_out())
+
+# ən çox istifadə olunan sözlərin tapılması
+# title üçün
+sum_words = title_bow.sum(axis=0)
+words_freq = [(word, sum_words[0, idx]) for word, idx in title_vectorizer.vocabulary_.items()]
+words_freq = sorted(words_freq, key=lambda x: x[1], reverse=True)
+title_word_freq = pd.DataFrame(words_freq, columns=['Word', 'Frequency'])
+print(title_word_freq)
+
+# content üçün
+sum_words = content_bow.sum(axis=0)
+words_freq = [(word, sum_words[0, idx]) for word, idx in content_vectorizer.vocabulary_.items()]
+words_freq = sorted(words_freq, key=lambda x: x[1], reverse=True)
+content_word_freq = pd.DataFrame(words_freq, columns=['Word', 'Frequency'])
+print(content_word_freq)
 
 # word embedding (vectorization)
 # TF-IDF
-tfidf = TfidfVectorizer()
-print(tfidf.fit_transform(df_cleaned['title']))
-print(tfidf.fit_transform(df_cleaned['content']))
+title_tfidf_vec = TfidfVectorizer(
+    max_features=1000,
+    ngram_range=(1, 2),
+    min_df=5,
+    max_df=0.8
+)
+title_tfidf = title_tfidf_vec.fit_transform(df_cleaned['title'])
+# ən yüksək çəkisi olan sözlərin qaytarılması
+title_feature_names = title_tfidf_vec.get_feature_names_out()
+title_dense = title_tfidf[0].todense().tolist()[0]
+title_tfidf_scores = list(zip(title_feature_names, title_dense))
+print(title_tfidf.shape)
+print(sorted(title_tfidf_scores, key=lambda x: x[1], reverse=True)[:5])
+
+
+content_tfidf_vec = TfidfVectorizer(
+    max_features=1000,
+    ngram_range=(1, 2),
+    min_df=5,
+    max_df=0.8
+)
+content_tfidf = content_tfidf_vec.fit_transform(df_cleaned['content'])
+# ən yüksək çəkisi olan sözlərin qaytarılması
+content_feature_names = title_tfidf_vec.get_feature_names_out()
+content_dense = content_tfidf[0].todense().tolist()[0]
+content_tfidf_scores = list(zip(content_feature_names, content_dense))
+print(content_tfidf.shape)
+print(sorted(content_tfidf_scores, key=lambda x: x[1], reverse=True)[:5])
