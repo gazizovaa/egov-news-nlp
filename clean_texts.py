@@ -5,6 +5,7 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
+from gensim.models import Word2Vec
 
 
 df = pd.read_csv('data/egov_news.csv')
@@ -142,8 +143,37 @@ content_tfidf_vec = TfidfVectorizer(
 )
 content_tfidf = content_tfidf_vec.fit_transform(df_cleaned['content'])
 # ən yüksək çəkisi olan sözlərin qaytarılması
-content_feature_names = title_tfidf_vec.get_feature_names_out()
+content_feature_names = content_tfidf_vec.get_feature_names_out()
 content_dense = content_tfidf[0].todense().tolist()[0]
 content_tfidf_scores = list(zip(content_feature_names, content_dense))
 print(content_tfidf.shape)
 print(sorted(content_tfidf_scores, key=lambda x: x[1], reverse=True)[:5])
+
+# Word2Vec embedding
+title_tokens = df_cleaned['title'].tolist()
+content_tokens = df_cleaned['content'].tolist()
+
+title_w2v_model = Word2Vec(
+    sentences=title_tokens,
+    vector_size=100,
+    window=5,
+    min_count=3,
+    epochs=10
+)
+# Modelin yadda saxlanması
+title_w2v_model.save('models/title_word2vec_model')
+print(f"Vocabulary Size: {len(title_w2v_model.wv)}")
+
+content_w2v_model = Word2Vec(
+    sentences=content_tokens,
+    vector_size=100,
+    window=5,
+    min_count=3,
+    epochs=10
+)
+# Modelin yadda saxlanması
+content_w2v_model.save('models/content_w2v_model')
+print(f"Vocabulary Size: {len(content_w2v_model.wv)}")
+
+
+
