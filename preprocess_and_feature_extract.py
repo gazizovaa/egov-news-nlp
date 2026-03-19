@@ -34,7 +34,7 @@ df.drop(columns=['dərc_olunma_tarixi'], inplace=True)
 
 # # il, ay və günə görə sıralama 
 df_cleaned = df.sort_values(by=['dərc_olunma_ili']).reset_index(drop=True)
-print(df_cleaned) 
+# print(df_cleaned) 
 
 #####Text Normalization#####
 print("-----Text Normalization-----")
@@ -59,6 +59,7 @@ nltk.download("stopwords")
 
 # azərbaycan dilindəki stopwords-ləri əldə edilməsi və silinməsi
 stopwords_lst = set(stopwords.words('azerbaijani'))
+# print(stopwords_lst) 
 df_cleaned['başlıq'] = df_cleaned['başlıq'].apply(
     lambda row: [word for word in word_tokenize(row) if word not in stopwords_lst]
     if isinstance(row, str) else [])
@@ -117,6 +118,40 @@ print(f"Başlıqlar üçün TF-İDF texnikası:\n{başlıq_tfidf}")
 məzmun_tfidf_vectorizer = TfidfVectorizer(max_features=1000)
 məzmun_tfidf = məzmun_tfidf_vectorizer.fit_transform(df_cleaned['məzmun'])
 print(f"Məzmunlar üçün count Vectorizer texnikası:\n{məzmun_bow}") 
+
+# WordVec
+başlıq_wordvec = Word2Vec(sentences=df_cleaned['başlıq_stem'], 
+                          vector_size=100, 
+                          window=3, 
+                          min_count=1)
+
+məzmun_wordvec = Word2Vec(sentences=df_cleaned['məzmun_stem'],
+                          vector_size=100,
+                          window=5,
+                          min_count=2)
+
+# hər bir sözü vektorlara çevirir
+# bütün vektorların ortalamasını hesablayır 
+# ən sonda 1 vektor yaradır
+def sentence_vector(tokens, model):
+    if not isinstance(tokens, list) or len(tokens) == 0:
+        return np.zeros(model.vector_size)
+    
+    vectors = [model.wv[word] for word in tokens if word in model.wv]
+    
+    if len(vectors) == 0:
+        return np.zeros(model.vector_size)
+    return np.mean(vectors, axis=0) 
+        
+
+df_cleaned['başlıq_vektor'] = df_cleaned['başlıq_stem'].apply(
+    lambda tokens: sentence_vector(tokens, başlıq_wordvec))
+
+df_cleaned['məzmun_vektor'] = df_cleaned['məzmun_stem'].apply(
+    lambda tokens: sentence_vector(tokens, məzmun_wordvec))
+
+
+
 
 
 
