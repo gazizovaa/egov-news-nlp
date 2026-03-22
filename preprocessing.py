@@ -3,12 +3,7 @@ import pandas as pd
 import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from gensim.models import Word2Vec
-from transformers import pipeline
 from azstemmer import AzStemmer
-import simplemma
 
 df = pd.read_csv('data/egov_news.csv')
 pd.set_option('display.max_columns', None) 
@@ -63,11 +58,6 @@ stopwords_lst = set(stopwords.words('azerbaijani'))
 df_cleaned['başlıq'] = df_cleaned['başlıq'].apply(
     lambda row: [word for word in word_tokenize(row) if word not in stopwords_lst]
     if isinstance(row, str) else [])
-print(df_cleaned['başlıq'])
-
-# xəbər başlıq cümlələrini sözlərə parçalanması
-for row in df_cleaned['başlıq']:
-    print(row)
 
 # xəbər kontentlərinə daxil olan cümlələrin sözlərə parçalanması
 # stopwords removal tətbiqi
@@ -98,62 +88,6 @@ print(df_cleaned[['başlıq_stem', 'məzmun_stem']])
 # token listləri yenidən string-ə convert edirik
 df_cleaned['başlıq'] = df_cleaned['başlıq'].apply(lambda x: ' '.join(x))
 df_cleaned['məzmun'] = df_cleaned['məzmun'].apply(lambda x: ' '.join(x))
-
-#####Feature Extraction#####
-print('-----Feature Extraction-----')
-# Bag-Of-Words 
-başlıq_vectorizer = CountVectorizer(max_features=1000)
-başlıq_bow = başlıq_vectorizer.fit_transform(df_cleaned['başlıq'])
-print(f"Başlıqlar üçün Count Vectorizer texnikası:\n{başlıq_bow}") 
-
-məzmun_vectorizer = CountVectorizer(max_features=1000)
-məzmun_bow = məzmun_vectorizer.fit_transform(df_cleaned['məzmun'])
-print(f"Məzmunlar üçün count Vectorizer texnikası:\n{məzmun_bow}") 
-
-# TF-IDF
-başlıq_tfidf_vectorizer = TfidfVectorizer(max_features=1000)
-başlıq_tfidf = başlıq_tfidf_vectorizer.fit_transform(df_cleaned['başlıq'])
-print(f"Başlıqlar üçün TF-İDF texnikası:\n{başlıq_tfidf}") 
-
-məzmun_tfidf_vectorizer = TfidfVectorizer(max_features=1000)
-məzmun_tfidf = məzmun_tfidf_vectorizer.fit_transform(df_cleaned['məzmun'])
-print(f"Məzmunlar üçün count Vectorizer texnikası:\n{məzmun_bow}") 
-
-# WordVec
-başlıq_wordvec = Word2Vec(sentences=df_cleaned['başlıq_stem'], 
-                          vector_size=100, 
-                          window=3, 
-                          min_count=1)
-
-məzmun_wordvec = Word2Vec(sentences=df_cleaned['məzmun_stem'],
-                          vector_size=100,
-                          window=5,
-                          min_count=2)
-
-# hər bir sözü vektorlara çevirir
-# bütün vektorların ortalamasını hesablayır 
-# ən sonda 1 vektor yaradır
-def sentence_vector(tokens, model):
-    if not isinstance(tokens, list) or len(tokens) == 0:
-        return np.zeros(model.vector_size)
-    
-    vectors = [model.wv[word] for word in tokens if word in model.wv]
-    
-    if len(vectors) == 0:
-        return np.zeros(model.vector_size)
-    return np.mean(vectors, axis=0) 
-        
-
-df_cleaned['başlıq_vektor'] = df_cleaned['başlıq_stem'].apply(
-    lambda tokens: sentence_vector(tokens, başlıq_wordvec))
-
-df_cleaned['məzmun_vektor'] = df_cleaned['məzmun_stem'].apply(
-    lambda tokens: sentence_vector(tokens, məzmun_wordvec))
-
-
-
-
-
 
 
 
