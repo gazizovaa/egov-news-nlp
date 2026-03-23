@@ -40,11 +40,11 @@ num_pipeline = Pipeline([
 
 # mətn pipeline-larının qurulması
 başlıq_pipeline = Pipeline([
-    ('tfidf', TfidfVectorizer(max_features=1000))
+    ('tfidf', TfidfVectorizer(max_features=500))
 ])
 
 məzmun_pipeline = Pipeline([
-    ('tfidf', TfidfVectorizer(max_features=1000))
+    ('tfidf', TfidfVectorizer(max_features=500))
 ])
 
 transformer = ColumnTransformer([
