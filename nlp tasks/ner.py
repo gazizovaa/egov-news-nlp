@@ -13,10 +13,13 @@ df.drop(columns=['Unnamed: 0', 'url'], inplace=True)
 başlıq_nlp = pipeline(
     task='ner',
     model='IsmatS/xlm-roberta-az-ner',
-    tokenizer='IsmatS/xlm-roberta-az-ner'
+    tokenizer='IsmatS/xlm-roberta-az-ner',
+    aggregation_strategy='simple' # token-ları birləşdirir
 )
 
 başlıq_nəticələri = başlıq_nlp(df['başlıq'].tolist())
-for başlıq_entities in başlıq_nəticələri:
-    for entity in başlıq_entities:
-        print(f"{entity['word']} -> {entity['entity']}") 
+
+for i, text_results in enumerate(başlıq_nəticələri):
+    print(f"Xəbər başlığı {i+1}")
+    for entity in text_results:
+        print(f"Entity: {entity['word']}, Label: {entity['entity_group']}") 
